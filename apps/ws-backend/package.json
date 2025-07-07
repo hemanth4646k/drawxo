@@ -4,17 +4,21 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build":"tsc -b",
-    "start":"node ./dist/index.js",
-    "dev":"npm run build && npm run start"
+    "build": "tsc -b",
+    "start": "node ./dist/index.js",
+    "dev": "npm run build && npm run start"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@repo/backend-common":"workspace:*",
+    "@repo/common":"workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/ws": "^8.18.1",
-    "ws": "^8.18.2",
-    "@repo/typescript-config":"workspace:*"
+    "jsonwebtoken": "^9.0.2",
+    "ws": "^8.18.2"
   }
 }
