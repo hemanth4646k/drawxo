@@ -2,20 +2,24 @@
   "name": "@repo/common",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "./dist/index.js",
   "devDependencies": {
-    "@repo/typescript-config": "workspace:*"
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^22.15.3",
+    "rimraf": "^6.0.1"
   },
-  "exports":{
-    "./types":"./src/types.ts"
+  "exports": {
+    "./types": "./dist/types.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean": "if exist dist rmdir /s /q dist",
+    "build": "npm run clean && mkdir dist 2>nul & tsc -b"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "dependencies": {
     "zod": "^3.25.67"
   }

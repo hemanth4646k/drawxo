@@ -2,23 +2,26 @@
   "name": "@repo/db",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "./dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean": "if exist dist rmdir /s /q dist",
+    "build": "npm run clean && mkdir dist 2>nul & tsc -b"
   },
-  "exports":{
-    "./client":"./src/index.ts"
+  "exports": {
+    "./client": "./dist/index.js"
   },
   "devDependencies": {
-    "@repo/typescript-config": "workspace:*"
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^22.15.3",
+    "prisma": "^6.3.1",
+    "rimraf": "^6.0.1"
   },
-  
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "dependencies": {
-    "@prisma/client": "6.11.1",
-    "prisma": "^6.11.1"
+    "@prisma/client": "^6.3.1"
   }
 }
