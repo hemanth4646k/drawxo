@@ -28,31 +28,57 @@ wss.on("connection",function connection(ws,request){
     ws.on("message",async function message(data){
         const parsedData = JSON.parse(data.toString());// { type: "join_room", roomId: 123123  }
         if(parsedData.type==="join_room"){
-            const user=users.find(u=>u.userId===userid);
-            if(user) {
-                user.rooms.push(parsedData.roomId);
+            try{
+                const user=users.find(u=>u.userId===userid);
+                if(user) {
+                    user.rooms.push(parsedData.roomId);
+                }
+                ws.send("Joined the room");
+            }catch(e){
+                ws.send("trouble joining room no:" + parsedData.roomId);
             }
         }else if(parsedData.type==="leave_room"){
-            const user=users.find(u=>u.userId==userid);
-            if(user) {
-                user.rooms = user.rooms.filter(room=>room!=parsedData.roomId);
+            try{
+                const user=users.find(u=>u.userId==userid);
+                if(user) {
+                    user.rooms = user.rooms.filter(room=>room!=parsedData.roomId);
+                }
+            }catch(e){
+                ws.send("trouble leaving room no:" + parsedData.roomId);
             }
         }else if(parsedData.type==="chat"){
+            // TODO: add zod validation
             const roomId = parsedData.roomId;
+            if(!roomId) {
+                ws.send("Room ID is required");
+                return;
+            }
             const user = users.find(u => u.userId === userid);
+            if(!user?.rooms.includes(roomId)) {
+                ws.send("You are not part of this room");
+                return;
+            }
             const message = parsedData.message;
-            const chatMessage = await prismaClient.chat.create({
-                data: {
-                    roomId,
-                    userId: user?.userId as string,
-                    message
-                }
-            });
-            users.forEach(user => {
-                if (user.rooms.includes(roomId)) { 
-                    user.ws.send(JSON.stringify({ type: "chat", roomId, message }));
-                }
-            });
+            if(!message || message.trim() === "") {
+                ws.send("Message cannot be empty");
+                return;
+            }
+            try{
+                const chatMessage = await prismaClient.chat.create({
+                    data: {
+                        roomId,
+                        userId: user?.userId as string,
+                        message
+                    }
+                });
+                users.forEach(user => {
+                    if (user.rooms.includes(roomId)) { 
+                        user.ws.send(JSON.stringify({ type: "chat", roomId, message }));
+                    }
+                });
+            }catch(e) {
+                ws.send("Error saving message");
+            }
         }
         // ws.send(data+"\n****\n"+userid);
     })
