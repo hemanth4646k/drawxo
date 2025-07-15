@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken'
 import { middleware } from './middleware.js';
 import {CreateRoomSchema, CreateUserSchema, SigninSchema} from "@repo/common/types";
 import { prismaClient } from '@repo/db/client';
+import bcrypt from 'bcrypt';
 const app=express();
 app.use(express.json());
  
@@ -11,13 +12,17 @@ app.post('/signup',async (req,res)=>{
     //zod validation
     const parsedData=CreateUserSchema.safeParse(req.body);
     if(!parsedData.success){
-        res.json({message:"Incorrect inputs"})
+        res.json({message:"Incorrect inputs",error:parsedData.error});
+        return;
     }
+    const hashedPassword=await bcrypt.hash(parsedData.data?.password, 10);
+    //db call
+    // create user in db
     try{
         await prismaClient.user.create({
             data:{
                 email:parsedData.data?.username as string,
-                password:parsedData.data?.password as string,
+                password:hashedPassword as string,
                 name:parsedData.data?.name
             }
         })
@@ -27,28 +32,68 @@ app.post('/signup',async (req,res)=>{
         res.status(411).json({message:"User already exists"});
     }
 });
-app.post('/signin',(req,res)=>{
+app.post('/signin',async (req,res)=>{
     const {username,password}=req.body;
     // zod validation and db call
     const data=SigninSchema.safeParse(req.body);
     if(!data.success){
         res.json({message:"Incorrect inputs"});
+        return;
     }
-    const userId=1;
-    const token=jwt.sign({
-        userId
-    },JWT_SECRET);
-    res.json({token});
+    try{
+        // find user in db
+        const user=await prismaClient.user.findFirst({
+            where:{
+                email:username
+            }
+        });
+
+        if(!user){
+            res.status(404).json({message:"User not found"});
+            return;
+        }
+        const isPasswordValid=await bcrypt.compare(password,user.password);
+        if(!isPasswordValid){
+            res.status(401).json({message:"Invalid credentials"});
+            return;
+        }
+        const userId=user.id;
+        const token=jwt.sign({
+            userId
+        },JWT_SECRET);
+        res.json({token});
+    }catch(e){
+        console.error(e);
+        res.status(500).json({message:"Internal server error"});
+    }
 });
-app.post('/create-room',middleware,(req,res)=>{
-    // db call
-    const data=CreateRoomSchema.safeParse(req.body);
-    if(!data.success){
+app.post('/create-room',middleware,async(req,res)=>{
+    // zod validation 
+    const roomData=CreateRoomSchema.safeParse(req.body);
+    if(!roomData.success){
         res.json({message:"Incorrect inputs"});
+        return;
     }
-    res.json({
-        roomId:123123 // should be random
-    })
+    
+    //@ts-ignore
+    const userId=req.userId;
+    // db call
+    // create room in db
+    try{
+        const room=await prismaClient.room.create({
+            data:{
+                slug:roomData.data.name,
+                adminId:userId
+            }
+        });
+        res.json({
+            roomId:room.id
+        })
+
+    }catch(e){
+        console.error(e);
+        res.status(403).json({message:"Room already exists"});
+    }
 });
 
 
