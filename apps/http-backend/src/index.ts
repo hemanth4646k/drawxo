@@ -67,6 +67,33 @@ app.post('/signin',async (req,res)=>{
         res.status(500).json({message:"Internal server error"});
     }
 });
+async function getLast50Messages(roomId: number) {
+    // db call  
+    // const messages=await prismaClient.room.findFirst({
+    //     where:{
+    //         id:roomId
+    //     },
+    //     select:{
+    //         chats:true
+    //     }
+    // })
+    // res.json(messages?.chats);
+    try{
+        const messages = await prismaClient.chat.findMany({
+            where: {
+                roomId: roomId
+            },
+            orderBy: {
+                id: 'desc'
+            },
+            take: 50 // Limit to the last 50 messages
+        });
+        return messages;
+
+    }catch(e){
+        return [];
+    }
+}
 app.post('/create-room',middleware,async(req,res)=>{
     // zod validation 
     const roomData=CreateRoomSchema.safeParse(req.body);
@@ -95,6 +122,14 @@ app.post('/create-room',middleware,async(req,res)=>{
         res.status(403).json({message:"Room already exists"});
     }
 });
+app.get("/chats/:roomId",middleware,async (req,res)=>{
+    const roomId=Number(req.params.roomId) ;
+    const messages=await getLast50Messages(roomId);
+    if(messages.length==0){
+        res.json({message:"couldnt find chats or incorrect room id"})
+    }
+    res.json(messages);
+})
 
 
 app.listen(3005);

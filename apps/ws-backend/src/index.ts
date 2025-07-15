@@ -1,7 +1,7 @@
 import WebSocket, { WebSocketServer } from "ws";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { JWT_SECRET } from "@repo/backend-common/config";
-
+import { prismaClient } from "@repo/db/client";
 interface User {
     userId: string;
     ws: WebSocket;
@@ -25,25 +25,32 @@ wss.on("connection",function connection(ws,request){
         return;
     }
     users.push({ userId: userid, ws: ws, rooms: [] });
-    ws.on("message",function message(data){
-        const parsedData = JSON.parse(data.toString());// { type: "join_room", roomName: "room1"  }
+    ws.on("message",async function message(data){
+        const parsedData = JSON.parse(data.toString());// { type: "join_room", roomId: 123123  }
         if(parsedData.type==="join_room"){
             const user=users.find(u=>u.userId===userid);
             if(user) {
-                user.rooms.push(parsedData.roomName);
+                user.rooms.push(parsedData.roomId);
             }
         }else if(parsedData.type==="leave_room"){
             const user=users.find(u=>u.userId==userid);
             if(user) {
-                user.rooms = user.rooms.filter(room=>room!=parsedData.roomName);
+                user.rooms = user.rooms.filter(room=>room!=parsedData.roomId);
             }
         }else if(parsedData.type==="chat"){
-            const roomName = parsedData.roomName;
+            const roomId = parsedData.roomId;
             const user = users.find(u => u.userId === userid);
             const message = parsedData.message;
+            const chatMessage = await prismaClient.chat.create({
+                data: {
+                    roomId,
+                    userId: user?.userId as string,
+                    message
+                }
+            });
             users.forEach(user => {
-                if (user.rooms.includes(roomName)) { 
-                    user.ws.send(JSON.stringify({ type: "chat", roomName, message }));
+                if (user.rooms.includes(roomId)) { 
+                    user.ws.send(JSON.stringify({ type: "chat", roomId, message }));
                 }
             });
         }
