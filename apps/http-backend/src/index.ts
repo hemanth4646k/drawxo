@@ -122,13 +122,30 @@ app.post('/create-room',middleware,async(req,res)=>{
         res.status(403).json({message:"Room already exists"});
     }
 });
-app.get("/chats/:roomId",middleware,async (req,res)=>{
+// TODO: Add middleware here \/
+app.get("/chats/:roomId",async (req,res)=>{
     const roomId=Number(req.params.roomId) ;
     const messages=await getLast50Messages(roomId);
     if(messages.length==0){
-        res.json({message:"couldnt find chats or incorrect room id"})
+        res.json({message:"couldnt find chats or incorrect room id",messages:[]});
+        return ;
     }
     res.json(messages);
+})
+app.get("/room/:slug",async (req,res)=>{
+    const slug=(req.params.slug) ;
+    try{
+        const room=await prismaClient.room.findFirst({
+            where:{
+                slug:slug
+            }
+        });
+        res.json(room);
+
+    }catch(e){
+        console.error(e);
+        res.status(404).json({message:"Room not found"});
+    }
 })
 
 
