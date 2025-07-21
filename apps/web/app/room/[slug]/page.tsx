@@ -7,12 +7,12 @@ async function getRoomData(slug:string) {
     const roomId= res.data.id;
     return roomId;
 }
-export default async function ({
-    params}:{
-        params: { slug:string }
-    }
-){
-    const slug=(await params).slug;
+export default async function RoomPage({
+    params
+}: {
+    params: Promise<{ slug: string }>
+}) {
+    const { slug } = await params;
     const roomId = await getRoomData(slug);
     return <ChatRoom id={roomId}></ChatRoom>
 }

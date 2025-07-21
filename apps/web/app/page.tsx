@@ -1,4 +1,5 @@
 "use client";
+import { Button } from '@repo/ui/button';
 import { useRouter } from 'next/navigation';
 import { useRef } from 'react';
 
@@ -12,9 +13,9 @@ export default function Home() {
 
       </div>
       <div>
-        <button onClick={()=>{
+        <Button onClick={()=>{
           router.push(`/room/${roomIdRef.current?.value}`);
-        }}>Submit</button>
+        }} variant='default' >Submit</Button>
       </div>
     </div>
   );
