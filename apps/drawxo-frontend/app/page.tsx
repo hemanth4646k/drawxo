@@ -1,26 +1,15 @@
-"use client";
 
+// Server component
 import { Button } from "@repo/ui/button";
 import { Card, CardHeader, CardContent } from "@repo/ui/card";
 import { Input } from "@repo/ui/input";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import type { ChangeEvent, KeyboardEvent } from "react";
+import Link from "next/link";
 
-export default function Home() {
-  const router = useRouter();
-  const [roomId, setRoomId] = useState("");
-
-  const handleJoinRoom = () => {
-    if (roomId.trim()) {
-      router.push(`/room/${roomId.trim()}`);
-    }
-  };
-
-  const handleCreateRoom = () => {
-    const newRoomId = Math.random().toString(36).substr(2, 9);
-    router.push(`/room/${newRoomId}`);
-  };
+// This is now a server component
+export default async function Home() {
+  // Generate a random room ID on the server
+  const generateRoomId = () => Math.random().toString(36).substr(2, 9);
+  const newRoomId = generateRoomId();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -32,9 +21,15 @@ export default function Home() {
               <h1 className="text-2xl font-bold text-gray-900">DrawXO</h1>
             </div>
             <div className="flex space-x-4">
-              <Button variant="outline" size="default">About</Button>
-              <Button variant="outline">Sign In</Button>
-              <Button>Sign Up</Button>
+              <Link href="/about">
+              <Button variant="outline" size="default" >About</Button>
+              </Link>
+              <Link href="/signin">
+              <Button variant="outline" >Sign In</Button>
+              </Link>
+              <Link href="/signup">
+              <Button >Sign Up</Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -62,18 +57,17 @@ export default function Home() {
                       <p className="text-sm text-gray-600">Join an existing room or create a new one</p>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="flex space-x-2">
+                      {/* Using form for server-side handling */}
+                      <form action="/api/join-room" className="flex space-x-2">
                         <Input
+                          name="roomId"
                           type="text"
                           placeholder="Enter Room ID"
-                          value={roomId}
-                          onChange={(e: ChangeEvent<HTMLInputElement>) => setRoomId(e.target.value)}
-                          onKeyPress={(e: KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && handleJoinRoom()}
                         />
-                        <Button onClick={handleJoinRoom} disabled={!roomId.trim()}>
+                        <Button type="submit">
                           Join
                         </Button>
-                      </div>
+                      </form>
                       <div className="relative">
                         <div className="absolute inset-0 flex items-center">
                           <div className="w-full border-t border-gray-300" />
@@ -82,13 +76,14 @@ export default function Home() {
                           <span className="px-2 bg-white text-gray-500">Or</span>
                         </div>
                       </div>
-                      <Button 
-                        variant="outline" 
-                        className="w-full"
-                        onClick={handleCreateRoom}
-                      >
-                        Create New Room
-                      </Button>
+                      <Link href={`/room/${newRoomId}`} className="w-full">
+                        <Button 
+                          variant="outline" 
+                          className="w-full"
+                        >
+                          Create New Room
+                        </Button>
+                      </Link>
                     </CardContent>
                   </Card>
                 </div>
