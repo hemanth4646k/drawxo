@@ -3,7 +3,7 @@
 import { initDraw } from "@/draw";
 import { useEffect, useRef } from "react";
 
-export default function (){
+export default function CanvasComponent(){
     const canvasRef= useRef<HTMLCanvasElement>(null);
     useEffect(()=>{
         if(canvasRef.current){
